@@ -10,7 +10,6 @@
 </head>
 <body class="bg-gray-100 min-h-screen p-4">
 
-    <!-- MENU UTAMA -->
     <div id="view_utama" class="max-w-md mx-auto mt-20 text-center space-y-8 bg-white p-8 rounded-2xl shadow-lg">
         <h1 class="text-3xl font-extrabold text-gray-900">PRODUKTIVITAS MANTRI</h1>
         <div class="space-y-4">
@@ -19,14 +18,12 @@
         </div>
     </div>
 
-    <!-- HALAMAN PERENCANAAN HARIAN -->
     <div id="view_perencanaan" class="max-w-7xl mx-auto hidden space-y-6">
         <div class="flex justify-between items-center">
             <h2 class="text-xl font-bold text-gray-800">PERENCANAAN HARIAN</h2>
             <button onclick="showView('utama')" class="text-blue-600 font-semibold hover:underline cursor-pointer">Kembali</button>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Form Input (Sisi Kiri) -->
             <div class="bg-white p-6 rounded-xl shadow space-y-4">
                 <input type="text" id="pn_p" oninput="handlePNCek('p')" placeholder="Masukkan PN (8 Digit)" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 <div id="info_p" class="hidden bg-blue-50 p-3 rounded-lg text-sm border border-blue-100">
@@ -34,7 +31,6 @@
                 </div>
                 
                 <div id="form_p" class="hidden space-y-3 border-t pt-4">
-                    <!-- INPUT BARU: Tanggal & Jam Otomatis -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Tanggal & Jam Input</label>
                         <input type="text" id="tanggal_p" readonly class="w-full border p-2 rounded-lg bg-gray-50 text-gray-600 font-medium focus:outline-none cursor-not-allowed">
@@ -43,6 +39,11 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Nama Nasabah</label>
                         <input type="text" id="nasabah_p" oninput="kapitalisasiHuruf(this)" placeholder="Nama Nasabah" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Nomor Rekening</label>
+                        <input type="text" id="rekening_p" oninput="formatHanyaAngka(this)" maxlength="15" placeholder="Wajib 15 Digit Angka" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                     
                     <div>
@@ -62,16 +63,17 @@
                 </div>
             </div>
             
-            <!-- Tabel Preview Validasi (Sisi Kanan) -->
-            <div class="bg-white p-6 rounded-xl shadow flex flex-col justify-between space-y-4">
+            <div class="bg-white p-6 rounded-xl shadow flex flex-col justify-between space-y-4 overflow-x-auto">
                 <div>
                     <h3 class="font-bold border-b pb-2 text-gray-800">Preview Validasi</h3>
                     <div id="v_info_p" class="text-xs text-gray-500 my-2">-</div>
-                    <table class="w-full text-sm text-left">
+                    <table class="w-full text-xs text-left">
                         <thead>
                             <tr class="bg-gray-100 text-gray-700">
                                 <th class="p-2">Nama</th>
+                                <th class="p-2">No. Rekening</th>
                                 <th class="p-2">Plafond</th>
+                                <th class="p-2">Sumber</th>
                                 <th class="p-2 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -83,7 +85,6 @@
         </div>
     </div>
 
-    <!-- HALAMAN EVALUASI HARIAN -->
     <div id="view_evaluasi" class="max-w-4xl mx-auto hidden space-y-6">
         <div class="flex justify-between items-center">
             <h2 class="text-xl font-bold text-gray-800">EVALUASI HARIAN</h2>
@@ -107,7 +108,6 @@
         </div>
     </div>
 
-    <!-- POPUP MODAL EVALUASI KUNJUNGAN -->
     <div id="modal_e" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-2xl max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto shadow-xl">
             <h3 id="modal_nasabah_nama" class="font-bold border-b pb-2 text-gray-800 text-lg"></h3>
@@ -155,16 +155,13 @@
         </div>
     </div>
 
-    <!-- LOGIKA JAVASCRIPT -->
     <script>
-        // PENTING: GANTI DENGAN URL GOOGLE WEB APP (DEPLOYMENT) ANDA DI SINI
         const API_URL = "https://script.google.com/macros/s/AKfycbzk3YzIR54u4atve0mi4USv5m5ZIgpOQ9HIjaafbECeRqWoQmFCN4uvCwhJlZAXm5hw/exec";
 
         let daftarP = [];
         let daftarE = [];
         let indexE = null;
 
-        // Fungsi Otomatis Mengisi Tanggal dan Jam saat ini
         function setWaktuOtomatis() {
             const sekarang = new Date();
             const tgl = String(sekarang.getDate()).padStart(2, '0');
@@ -172,11 +169,9 @@
             const thn = sekarang.getFullYear();
             const jam = String(sekarang.getHours()).padStart(2, '0');
             const mnt = String(sekarang.getMinutes()).padStart(2, '0');
-            
             document.getElementById('tanggal_p').value = `${tgl}/${bln}/${thn} ${jam}:${mnt}`;
         }
 
-        // Auto-Kapitalisasi Huruf Pertama
         function kapitalisasiHuruf(input) {
             let kata = input.value.split(' ');
             for (let i = 0; i < kata.length; i++) {
@@ -185,11 +180,14 @@
             input.value = kata.join(' ');
         }
 
-        // Format Ribuan/Jutaan Real-time
         function formatMataUang(input) {
             let nilaiMurni = input.value.replace(/[^0-9]/g, '');
             if(nilaiMurni === "") { input.value = ""; return; }
             input.value = Number(nilaiMurni).toLocaleString('id-ID');
+        }
+
+        function formatHanyaAngka(input) {
+            input.value = input.value.replace(/[^0-9]/g, '');
         }
 
         function dapatkanAngkaMurni(stringAngka) {
@@ -200,20 +198,17 @@
             document.getElementById('char_count').innerText = textarea.value.length + "/250";
         }
 
-        // Navigasi Halaman & Reset Form otomatis
         function showView(view) {
             document.querySelectorAll('body > div').forEach(div => div.classList.add('hidden'));
             document.getElementById('view_' + view).classList.remove('hidden');
-            
             if (view === 'utama') {
                 resetSemuaForm();
             } else if (view === 'perencanaan') {
-                setWaktuOtomatis(); // Set jam aktif saat form perencanaan dibuka
+                setWaktuOtomatis();
             }
         }
 
         function resetSemuaForm() {
-            // Reset Perencanaan
             document.getElementById('pn_p').value = "";
             document.getElementById('nama_p').innerText = "";
             document.getElementById('uker_p').innerText = "";
@@ -223,7 +218,6 @@
             document.getElementById('v_info_p').innerText = "-";
             daftarP = []; renderP();
             
-            // Reset Evaluasi
             document.getElementById('pn_e').value = "";
             document.getElementById('nama_e').innerText = "";
             document.getElementById('uker_e').innerText = "";
@@ -231,11 +225,9 @@
             daftarE = []; renderE();
         }
 
-        // Validasi & Auto Padding PN (8 Digit)
         function handlePNCek(mode) {
             let inputEl = document.getElementById('pn_' + mode);
             let pn = inputEl.value.trim();
-            
             if (pn.length === 0) {
                 document.getElementById('info_' + mode).classList.add('hidden');
                 if (mode === 'p') document.getElementById('form_p').classList.add('hidden');
@@ -269,20 +261,22 @@
             }
         }
 
-        // LOGIKA PERENCANAAN
         function tambahKeDaftar() {
             if(daftarP.length >= 10) return alert("Maksimal 10!");
             let n = document.getElementById('nasabah_p').value;
+            let r = document.getElementById('rekening_p').value;
             let p_tampilan = document.getElementById('plafond_p').value;
             let s = document.getElementById('sumber_p').value;
             
-            if(!n || !p_tampilan || !s) return alert("Lengkapi data!");
-            let p_angka = dapatkanAngkaMurni(p_tampilan);
+            if(!n || !r || !p_tampilan || !s) return alert("Lengkapi semua data!");
+            if(r.length !== 15) return alert("Nomor Rekening wajib berisi tepat 15 digit angka!");
             
-            daftarP.push({nama: n, plafond: p_angka, sumber: s, plafondTeks: p_tampilan});
+            let p_angka = dapatkanAngkaMurni(p_tampilan);
+            daftarP.push({nama: n, rekening: r, plafond: p_angka, sumber: s, plafondTeks: p_tampilan});
             renderP();
             
             document.getElementById('nasabah_p').value = ""; 
+            document.getElementById('rekening_p').value = ""; 
             document.getElementById('plafond_p').value = "";
             document.getElementById('sumber_p').value = "";
         }
@@ -292,7 +286,9 @@
             daftarP.forEach((x, i) => { 
                 h += `<tr class="border-b">
                     <td class="p-2 font-medium">${x.nama}</td>
+                    <td class="p-2">${x.rekening}</td>
                     <td class="p-2">Rp ${x.plafondTeks}</td>
+                    <td class="p-2">${x.sumber}</td>
                     <td class="p-2 text-center"><button onclick="daftarP.splice(${i},1);renderP()" class="text-red-500 font-bold hover:text-red-700 cursor-pointer">X</button></td>
                 </tr>`; 
             });
@@ -318,7 +314,6 @@
             }).catch(() => alert("Gagal mengirim data ke Spreadsheet."));
         }
 
-        // LOGIKA EVALUASI
         function muatDataEvaluasi(pn) {
             fetch(`${API_URL}?action=getPlanningList&pn=${pn}`)
             .then(res => res.json())
@@ -343,7 +338,6 @@
             document.getElementById('modal_e').classList.remove('hidden');
         }
 
-        // Toggle opsi tampilan form jika berminat
         function toggleBerminat(v) {
             document.getElementById('box_berminat').className = v === 'Berminat' ? "space-y-3 bg-blue-50 p-4 rounded-xl border border-blue-100" : "hidden";
         }
@@ -370,7 +364,6 @@
                 renderE();
                 document.getElementById('modal_e').classList.add('hidden');
                 
-                // Bersihkan isian modal setelah sukses
                 document.getElementById('hasil_e').value = "";
                 document.getElementById('produk_e').value = "";
                 document.getElementById('besar_e').value = "";
