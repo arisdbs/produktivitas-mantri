@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Produktivitas Mantri</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+    <div id="view_utama" class="max-w-md mx-auto mt-20 text-center space-y-8 bg-white p-8 rounded-2xl shadow-lg">
+        <h1 class="text-3xl font-extrabold text-gray-900">PRODUKTIVITAS MANTRI</h1>
+        <div class="space-y-4">
+            <button onclick="showView('perencanaan')" class="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg cursor-pointer hover:bg-blue-700 transition">1. Perencanaan Harian</button>
+            <button onclick="showView('evaluasi')" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg cursor-pointer hover:bg-emerald-700 transition">2. Evaluasi Harian</button>
+        </div>
+    </div>
+
+    <div id="view_perencanaan" class="max-w-7xl mx-auto hidden space-y-6">
+        <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800">PERENCANAAN HARIAN</h2>
+            <button onclick="showView('utama')" class="text-blue-600 font-semibold hover:underline cursor-pointer">Kembali</button>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow space-y-4">
+                <input type="text" id="pn_p" oninput="handlePNCek('p')" placeholder="Masukkan PN (8 Digit)" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <div id="info_p" class="hidden bg-blue-50 p-3 rounded-lg text-sm border border-blue-100">
+                    Nama: <b id="nama_p"></b><br>Unit: <b id="uker_p"></b>
+                </div>
+                <div id="form_p" class="hidden space-y-3 border-t pt-4">
+                    <input type="text" id="nasabah_p" oninput="kapitalisasiHuruf(this)" placeholder="Nama Nasabah" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <input type="text" id="plafond_p" oninput="formatMataUang(this)" placeholder="Plafond (Rp)" class="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <select id="sumber_p" class="w-full border p-2 rounded bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">-- Pilih Sumber --</option>
+                        <option value="Pipeline Prewash">Pipeline Prewash</option>
+                        <option value="Canvasing">Canvasing</option>
+                    </select>
+                    <button onclick="tambahKeDaftar()" class="w-full bg-blue-100 text-blue-700 py-2 rounded font-bold hover:bg-blue-200 transition cursor-pointer">+ Tambah Preview</button>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow flex flex-col justify-between space-y-4">
+                <div>
+                    <h3 class="font-bold border-b pb-2 text-gray-800">Preview Validasi</h3>
+                    <div id="v_info_p" class="text-xs text-gray-500 my-2">-</div>
+                    <table class="w-full text-sm text-left">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700">
+                                <th class="p-2">Nama</th>
+                                <th class="p-2">Plafond</th>
+                                <th class="p-2 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="v_tabel_p"></tbody>
+                    </table>
+                </div>
+                <button id="btn_submit_p" onclick="submitPerencanaan()" disabled class="w-full bg-gray-300 text-white py-3 rounded-xl font-bold cursor-not-allowed">SUBMIT PERENCANAAN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view_evaluasi" class="max-w-4xl mx-auto hidden space-y-6">
+        <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800">EVALUASI HARIAN</h2>
+            <button onclick="showView('utama')" class="text-blue-600 font-semibold hover:underline cursor-pointer">Kembali</button>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow space-y-4">
+            <input type="text" id="pn_e" oninput="handlePNCek('e')" placeholder="Masukkan PN Anda" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <div id="info_e" class="hidden bg-emerald-50 p-3 rounded-lg text-sm border border-emerald-100 text-gray-700">
+                Mantri: <b id="nama_e"></b> &nbsp;|&nbsp; Unit: <b id="uker_e"></b>
+            </div>
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700">
+                        <th class="p-2">Nasabah</th>
+                        <th class="p-2">Plafond Perencanaan</th>
+                        <th class="p-2">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tabel_e_body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal_e" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-2xl max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto shadow-xl">
+            <h3 id="modal_nasabah_nama" class="font-bold border-b pb-2 text-gray-800 text-lg"></h3>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Hasil Kunjungan</label>
+                <select id="hasil_e" onchange="toggleBerminat(this.value)" class="w-full border p-2 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <option value="">-- Pilih Hasil --</option>
+                    <option value="Berminat">Berminat</option>
+                    <option value="Belum berminat">Belum berminat</option>
+                </select>
+            </div>
+            <div id="box_berminat" class="hidden space-y-3 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <div>
+                    <label class="block text-xs font-semibold text-blue-900 mb-1">Produk Pinjaman</label>
+                    <select id="produk_e" class="w-full border p-2 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Pilih Produk --</option>
+                        <option value="KUR">KUR</option>
+                        <option value="KPP">KPP</option>
+                        <option value="KUPEDES">KUPEDES</option>
+                        <option value="KUPRA">KUPRA</option>
+                        <option value="BRIGUNA">BRIGUNA</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-blue-900 mb-1">Besar Pinjaman (Rp)</label>
+                    <input type="text" id="besar_e" oninput="formatMataUang(this)" placeholder="Contoh: 50.000.000" class="w-full border p-2 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-blue-900 mb-1">Jangka Waktu (Bulan)</label>
+                    <input type="number" id="tenor_e" placeholder="Contoh: 36" class="w-full border p-2 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold text-blue-900">Deskripsi Usaha</label>
+                        <span id="char_count" class="text-[10px] text-gray-500">0/250</span>
+                    </div>
+                    <textarea id="deskripsi_e" maxlength="250" oninput="hitungKarakter(this)" placeholder="Kondisi usaha / komoditas lapangan..." rows="3" class="w-full border p-2 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                </div>
+            </div>
+            <button onclick="submitEvaluasiHarian()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold cursor-pointer transition shadow-md">SUBMIT</button>
+            <button onclick="document.getElementById('modal_e').classList.add('hidden')" class="w-full text-gray-400 text-sm hover:text-gray-600 cursor-pointer text-center block">Batal</button>
+        </div>
+    </div>
+
+    <script>
+        // PENTING: ISI DENGAN URL GOOGLE WEBP APP ANDA
+        const API_URL = https://script.google.com/macros/s/AKfycbzk3YzIR54u4atve0mi4USv5m5ZIgpOQ9HIjaafbECeRqWoQmFCN4uvCwhJlZAXm5hw/exec;
+
+        let daftarP = [];
+        let daftarE = [];
+        let indexE = null;
+
+        function kapitalisasiHuruf(input) {
+            let kata = input.value.split(' ');
+            for (let i = 0; i < kata.length; i++) {
+                if (kata[i].length > 0) kata[i] = kata[i].charAt(0).toUpperCase() + kata[i].slice(1);
+            }
+            input.value = kata.join(' ');
+        }
+
+        function formatMataUang(input) {
+            let nilaiMurni = input.value.replace(/[^0-9]/g, '');
+            if(nilaiMurni === "") { input.value = ""; return; }
+            input.value = Number(nilaiMurni).toLocaleString('id-ID');
+        }
+
+        function dapatkanAngkaMurni(stringAngka) {
+            return parseInt(stringAngka.replace(/[^0-9]/g, '')) || 0;
+        }
+
+        function hitungKarakter(textarea) {
+            document.getElementById('char_count').innerText = textarea.value.length + "/250";
+        }
+
+        function showView(view) {
+            document.querySelectorAll('body > div').forEach(div => div.classList.add('hidden'));
+            document.getElementById('view_' + view).classList.remove('hidden');
+            if (view === 'utama') resetSemuaForm();
+        }
+
+        function resetSemuaForm() {
+            document.getElementById('pn_p').value = "";
+            document.getElementById('nama_p').innerText = "";
+            document.getElementById('uker_p').innerText = "";
+            document.getElementById('info_p').classList.add('hidden');
+            document.getElementById('form_p').classList.add('hidden');
+            document.getElementById('v_info_p').innerText = "-";
+            daftarP = []; renderP();
+            
+            document.getElementById('pn_e').value = "";
+            document.getElementById('nama_e').innerText = "";
+            document.getElementById('uker_e').innerText = "";
+            document.getElementById('info_e').classList.add('hidden');
+            daftarE = []; renderE();
+        }
+
+        function handlePNCek(mode) {
+            let inputEl = document.getElementById('pn_' + mode);
+            let pn = inputEl.value.trim();
+            if (pn.length === 0) {
+                document.getElementById('info_' + mode).classList.add('hidden');
+                if (mode === 'p') document.getElementById('form_p').classList.add('hidden');
+                return;
+            }
+            if (pn.length > 0 && pn.length < 8) {
+                pn = pn.padStart(8, '0');
+                inputEl.value = pn;
+            }
+            if(pn.length === 8) {
+                // Berkomunikasi ke API Google Sheets lewat fetch
+                fetch(`${API_URL}?action=getMantriData&pn=${pn}`)
+                .then(res => res.json())
+                .then(res => {
+                    if(res) {
+                        document.getElementById('nama_'+mode).innerText = res.nama;
+                        if(mode === 'p') {
+                          document.getElementById('uker_p').innerText = res.uker;
+                          document.getElementById('info_p').classList.remove('hidden');
+                          document.getElementById('form_p').classList.remove('hidden');
+                          document.getElementById('v_info_p').innerText = "PN: " + pn + " | " + res.nama;
+                        } else {
+                          document.getElementById('uker_e').innerText = res.uker;
+                          document.getElementById('info_e').classList.remove('hidden');
+                          muatDataEvaluasi(pn);
+                        }
+                    } else { 
+                        alert("PN " + pn + " tidak terdaftar di database Sheet!"); 
+                        document.getElementById('info_' + mode).classList.add('hidden');
+                    }
+                }).catch(err => alert("Gagal memuat data, periksa kembali setelan App Script!"));
+            }
+        }
+
+        function tambahKeDaftar() {
+            if(daftarP.length >= 10) return alert("Maksimal 10!");
+            let n = document.getElementById('nasabah_p').value;
+            let p_tampilan = document.getElementById('plafond_p').value;
+            let s = document.getElementById('sumber_p').value;
+            if(!n || !p_tampilan || !s) return alert("Lengkapi data!");
+            let p_angka = dapatkanAngkaMurni(p_tampilan);
+            daftarP.push({nama: n, plafond: p_angka, sumber: s, plafondTeks: p_tampilan});
+            renderP();
+            document.getElementById('nasabah_p').value = ""; document.getElementById('plafond_p').value = ""; document.getElementById('sumber_p').value = "";
+        }
+
+        function renderP() {
+            let h = "";
+            daftarP.forEach((x, i) => { 
+                h += `<tr class="border-b"><td class="p-2 font-medium">${x.nama}</td><td class="p-2">Rp ${x.plafondTeks}</td><td class="p-2 text-center"><button onclick="daftarP.splice(${i},1);renderP()" class="text-red-500 font-bold hover:text-red-700 cursor-pointer">X</button></td></tr>`; 
+            });
+            document.getElementById('v_tabel_p').innerHTML = h;
+            let adaData = daftarP.length > 0;
+            document.getElementById('btn_submit_p').disabled = !adaData;
+            document.getElementById('btn_submit_p').className = adaData ? "w-full bg-blue-600 text-white py-3 rounded-xl font-bold cursor-pointer hover:bg-blue-700 transition" : "w-full bg-gray-300 text-white py-3 rounded-xl font-bold cursor-not-allowed";
+        }
+
+        function submitPerencanaan() {
+            let payload = {
+                action: "savePerencanaan",
+                pn: document.getElementById('pn_p').value,
+                nama: document.getElementById('nama_p').innerText,
+                uker: document.getElementById('uker_p').innerText,
+                daftarNasabah: daftarP
+            };
+            fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(() => {
+                alert("Perencanaan berhasil disubmit!");
+                daftarP = []; renderP(); showView('utama');
+            });
+        }
+
+        function muatDataEvaluasi(pn) {
+            fetch(`${API_URL}?action=getPlanningList&pn=${pn}`)
+            .then(res => res.json())
+            .then(res => { daftarE = res; renderE(); });
+        }
+
+        function renderE() {
+            let h = "";
+            daftarE.forEach((x, i) => {
+                h += `<tr class="border-b hover:bg-gray-50"><td class="p-2 font-medium">${x.nama}</td><td class="p-2">Rp ${Number(x.plafond).toLocaleString('id-ID')}</td><td class="p-2"><button onclick="bukaModalE(${i})" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer hover:bg-blue-700 transition">Hasil Kunjungan</button></td></tr>`;
+            });
+            document.getElementById('tabel_e_body').innerHTML = h || "<tr><td colspan='3' class='text-center py-4 text-gray-400 italic'>Tidak ada data perencanaan harian.</td></tr>";
+        }
+
+        function bukaModalE(i) {
+            indexE = i;
+            document.getElementById('modal_nasabah_nama').innerText = daftarE[i].nama;
+            document.getElementById('modal_e').classList.remove('hidden');
+        }
+
+        function toggleBerminat(v) {
+            document.getElementById('box_berminat').className = v === 'Berminat' ? "space-y-3 bg-blue-50 p-4 rounded-xl border border-blue-100" : "hidden";
+        }
+
+        function submitEvaluasiHarian() {
+            let hasil = document.getElementById('hasil_e').value;
+            if(!hasil) return alert("Pilih hasil!");
+            
+            let data = {
+                action: "saveEvaluasi",
+                pn: document.getElementById('pn_e').value,
+                namaNasabah: daftarE[indexE].nama,
+                hasil: hasil,
+                produk: document.getElementById('produk_e').value || "-",
+                besarPinjaman: dapatkanAngkaMurni(document.getElementById('besar_e').value) || 0,
+                tenor: document.getElementById('tenor_e').value || "-",
+                deskripsi: document.getElementById('deskripsi_e').value || "-"
+            };
+            
+            fetch(API_URL, { method: "POST", body: JSON.stringify(data) })
+            .then(() => {
+                alert("Evaluasi berhasil disubmit!");
+                daftarE.splice(indexE, 1);
+                renderE();
+                document.getElementById('modal_e').classList.add('hidden');
+                
+                document.getElementById('hasil_e').value = "";
+                document.getElementById('produk_e').value = "";
+                document.getElementById('besar_e').value = "";
+                document.getElementById('tenor_e').value = "";
+                document.getElementById('deskripsi_e').value = "";
+                document.getElementById('char_count').innerText = "0/250";
+            });
+        }
+    </script>
+</body>
+</html>
